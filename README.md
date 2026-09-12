@@ -22,7 +22,7 @@ The repository is configured as a Vercel monorepo project. The recommended Verce
 Root Directory is the repository root (`.`), so Vercel can discover both the
 frontend build and the root `api/[...path].js` serverless function:
 
-- Build command: `pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/vertex-os run build`
+- Build command: `pnpm --filter @workspace/db run push && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/vertex-os run build`
 - Output directory: `artifacts/vertex-os/dist/public`
 - API functions: `api/[...path].js`
 - SPA routes: `/customers`, `/projects`, `/invoices`, and `/activity` rewrite to `index.html`
@@ -38,3 +38,7 @@ the Vercel project under the Production environment:
 - `SESSION_SECRET`
 
 The values belong in Vercel's encrypted Environment Variables settings and should never be committed to this repository.
+
+The Vercel build applies the Drizzle schema to the configured PostgreSQL database
+before building the API, so the Neon database must be reachable through
+`DATABASE_URL` during the build.
