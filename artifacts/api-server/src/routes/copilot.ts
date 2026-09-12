@@ -28,7 +28,8 @@ const buildGeminiBody = (
         "Do not use general business knowledge to fill a missing workspace fact. " +
         "If the answer is not directly supported by the context, say that the workspace does not contain enough information and name the missing field. " +
         "For calculations, show the inputs taken from the context and calculate only from those inputs. " +
-        "Give a direct answer first, then at most 2 practical next steps when useful. " +
+        "Analyze the question carefully before answering. Give a complete, well-structured answer with the relevant reasoning, details, calculations, assumptions, and practical next steps when they are supported by the context. " +
+        "Do not shorten the answer just to be brief; prioritize accuracy, completeness, and usefulness while avoiding repetition. " +
         languageInstruction,
     }],
   },
@@ -37,9 +38,9 @@ const buildGeminiBody = (
     parts: [{ text: `Workspace context:\n${context}\n\nQuestion:\n${message}` }],
   }],
   generationConfig: {
-    maxOutputTokens: 1200,
-    temperature: 0.15,
-    topP: 0.8,
+    maxOutputTokens: 4096,
+    temperature: 0.25,
+    topP: 0.9,
   },
 });
 
