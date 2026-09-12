@@ -1,0 +1,312 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: copilot
+    description: Vertex AI Copilot operations
+  - name: workspace
+    description: Workspace data operations
+  - name: copilot-history
+    description: Saved Vertex AI Copilot conversations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /copilot/chat:
+    post:
+      operationId: sendCopilotMessage
+      tags: [copilot]
+      summary: Ask Vertex AI Copilot about workspace context
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CopilotMessageInput"
+      responses:
+        "200":
+          description: Copilot response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CopilotMessage"
+        "400":
+          description: Invalid message
+        "500":
+          description: Copilot unavailable
+  /copilot/conversations:
+    get:
+      operationId: listCopilotConversations
+      tags: [copilot-history]
+      summary: List saved Copilot conversations
+      responses:
+        "200":
+          description: Saved conversations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CopilotConversationList"
+    post:
+      operationId: createCopilotConversation
+      tags: [copilot-history]
+      summary: Start a Copilot conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CopilotConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CopilotConversation"
+  /copilot/conversations/{conversationId}:
+    delete:
+      operationId: deleteCopilotConversation
+      tags: [copilot-history]
+      summary: Delete a saved Copilot conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Conversation deleted
+        "404":
+          description: Conversation not found
+    get:
+      operationId: getCopilotConversation
+      tags: [copilot-history]
+      summary: Get a saved Copilot conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CopilotConversationDetail"
+        "404":
+          description: Conversation not found
+  /workspace:
+    get:
+      operationId: getWorkspace
+      tags: [workspace]
+      summary: Get the current workspace snapshot
+      responses:
+        "200":
+          description: Workspace snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSnapshot"
+    put:
+      operationId: updateWorkspace
+      tags: [workspace]
+      summary: Persist the current workspace snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceSnapshotBody"
+      responses:
+        "200":
+          description: Updated workspace snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSnapshot"
+        "400":
+          description: Invalid workspace snapshot
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    CopilotMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        language:
+          type: string
+          enum: [en, ar]
+        context:
+          type: string
+          maxLength: 12000
+        conversationId:
+          type: integer
+      required:
+        - message
+        - language
+        - context
+    CopilotMessage:
+      type: object
+      properties:
+        answer:
+          type: string
+        model:
+          type: string
+        conversationId:
+          type: integer
+      required:
+        - answer
+        - model
+    CopilotConversationInput:
+      type: object
+      properties:
+        title: { type: string, maxLength: 160 }
+        language: { type: string, enum: [en, ar] }
+      required: [language]
+    CopilotConversation:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        language: { type: string, enum: [en, ar] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, title, language, createdAt, updatedAt]
+    CopilotConversationMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, role, content, createdAt]
+    CopilotConversationList:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items: { $ref: "#/components/schemas/CopilotConversation" }
+      required: [conversations]
+    CopilotConversationDetail:
+      allOf:
+        - $ref: "#/components/schemas/CopilotConversation"
+        - type: object
+          properties:
+            messages:
+              type: array
+              items: { $ref: "#/components/schemas/CopilotConversationMessage" }
+          required: [messages]
+    WorkspaceMetrics:
+      type: object
+      properties:
+        monthlyRevenue: { type: number }
+        cashPosition: { type: number }
+        activeCustomers: { type: integer }
+        openProjects: { type: integer }
+        cashRunwayMonths: { type: number }
+        monthlyBurn: { type: number }
+        dueNext14Days: { type: number }
+      required: [monthlyRevenue, cashPosition, activeCustomers, openProjects, cashRunwayMonths, monthlyBurn, dueNext14Days]
+    WorkspaceCustomer:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        company: { type: string }
+        sector: { type: string }
+        health: { type: string, enum: [On track, At risk, Needs attention] }
+        owner: { type: string }
+        lastActivity: { type: string }
+        value: { type: number }
+        initials: { type: string }
+        color: { type: string }
+      required: [id, name, company, sector, health, owner, lastActivity, value, initials, color]
+    WorkspaceProject:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        client: { type: string }
+        status: { type: string, enum: [Planning, In progress, Review, Complete] }
+        progress: { type: integer }
+        dueDate: { type: string }
+        owner: { type: string }
+        tasks: { type: string }
+      required: [id, name, client, status, progress, dueDate, owner, tasks]
+    WorkspaceInvoice:
+      type: object
+      properties:
+        id: { type: string }
+        number: { type: string }
+        client: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status: { type: string, enum: [Paid, Due soon, Overdue, Draft] }
+        dueDate: { type: string }
+      required: [id, number, client, amount, currency, status, dueDate]
+    WorkspaceActivity:
+      type: object
+      properties:
+        id: { type: string }
+        actor: { type: string }
+        action: { type: string }
+        target: { type: string }
+        time: { type: string }
+        type: { type: string, enum: [invoice, project, customer, system] }
+        initials: { type: string }
+      required: [id, actor, action, target, time, type, initials]
+    WorkspaceSnapshotBody:
+      type: object
+      properties:
+        owner: { type: string }
+        metrics: { $ref: "#/components/schemas/WorkspaceMetrics" }
+        customers:
+          type: array
+          items: { $ref: "#/components/schemas/WorkspaceCustomer" }
+        projects:
+          type: array
+          items: { $ref: "#/components/schemas/WorkspaceProject" }
+        invoices:
+          type: array
+          items: { $ref: "#/components/schemas/WorkspaceInvoice" }
+        activities:
+          type: array
+          items: { $ref: "#/components/schemas/WorkspaceActivity" }
+      required: [owner, metrics, customers, projects, invoices, activities]
+    WorkspaceSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/WorkspaceSnapshotBody"
+        - type: object
+          properties:
+            workspaceId: { type: string }
+            updatedAt: { type: string, format: date-time }
+          required: [workspaceId, updatedAt]
+

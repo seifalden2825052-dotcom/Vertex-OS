@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter @workspace/vertex-os run build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "outputDirectory": "artifacts/vertex-os/dist/public",
+  "framework": "vite"
+}
