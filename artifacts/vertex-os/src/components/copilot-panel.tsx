@@ -4,7 +4,6 @@ import {
   useDeleteCopilotConversation,
   useGetCopilotConversation,
   useListCopilotConversations,
-  useSendCopilotMessage,
 } from "@workspace/api-client-react";
 
 type Lang = "en" | "ar";
@@ -23,12 +22,12 @@ type ConversationItem = {
 };
 
 export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
-  const mutation = useSendCopilotMessage();
   const conversationsQuery = useListCopilotConversations();
   const deleteConversation = useDeleteCopilotConversation();
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [message, setMessage] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>(() => [
     {
       role: "assistant",
@@ -69,36 +68,93 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
     })));
   }, [activeConversationQuery.data]);
 
-  const sendMessage = (trimmed: string, conversationId?: number) => {
-    mutation.mutate(
-      { data: { message: trimmed, language: lang, context, conversationId } },
-      {
-        onSuccess: (result) => {
-          setConversation((items) => [...items, { role: "assistant", content: result.answer }]);
-          setActiveConversationId(result.conversationId ?? conversationId ?? null);
-          conversationsQuery.refetch();
-        },
-        onError: () => {
-          setConversation((items) => [
-            ...items,
-            {
-              role: "assistant",
-              content: t(
-                "Vertex AI is unavailable right now. Check the Gemini key and try again.",
-                "Vertex AI غير متاح الآن. راجع مفتاح Gemini وحاول مرة أخرى.",
-              ),
-            },
-          ]);
-        },
-      },
-    );
+  const sendMessage = async (trimmed: string, conversationId?: number) => {
+    setIsStreaming(true);
+    let answer = "";
+    const updateAnswer = (content: string) => {
+      answer += content;
+      setConversation((items) => {
+        const next = [...items];
+        const lastIndex = next.length - 1;
+        if (lastIndex >= 0 && next[lastIndex].role === "assistant") {
+          next[lastIndex] = { role: "assistant", content: answer };
+        }
+        return next;
+      });
+    };
+
+    try {
+      const response = await fetch("/api/copilot/chat/stream", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: trimmed,
+          language: lang,
+          context,
+          conversationId,
+        }),
+      });
+      if (!response.ok || !response.body) {
+        throw new Error("Vertex AI request failed");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let resultConversationId = conversationId;
+      const processEvent = (event: string) => {
+        const dataLine = event.split("\n").find((line) => line.startsWith("data:"));
+        if (!dataLine) return;
+        const payload = JSON.parse(dataLine.slice(5).trim()) as {
+          type: "delta" | "done" | "error";
+          text?: string;
+          error?: string;
+          result?: { conversationId?: number };
+        };
+        if (payload.type === "delta" && payload.text) updateAnswer(payload.text);
+        if (payload.type === "done") {
+          resultConversationId = payload.result?.conversationId ?? conversationId;
+        }
+        if (payload.type === "error") throw new Error(payload.error ?? "Vertex AI request failed");
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+        events.forEach(processEvent);
+        if (done) break;
+      }
+      if (buffer.trim()) processEvent(buffer);
+      if (!answer) throw new Error("Vertex AI returned an empty answer");
+      setActiveConversationId(resultConversationId ?? null);
+      conversationsQuery.refetch();
+    } catch {
+      setConversation((items) => {
+        const next = [...items];
+        const lastIndex = next.length - 1;
+        const errorMessage = t(
+          "Vertex AI is unavailable right now. Check the Gemini key and try again.",
+          "Vertex AI غير متاح الآن. راجع مفتاح Gemini وحاول مرة أخرى.",
+        );
+        if (lastIndex >= 0 && next[lastIndex].role === "assistant") {
+          next[lastIndex] = { role: "assistant", content: answer || errorMessage };
+        }
+        return next;
+      });
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   const submit = (value = message) => {
     const trimmed = value.trim();
-    if (!trimmed || mutation.isPending) return;
+    if (!trimmed || isStreaming) return;
 
     setConversation((items) => [...items, { role: "user", content: trimmed }]);
+    setConversation((items) => [...items, { role: "assistant", content: "" }]);
     setMessage("");
     sendMessage(trimmed, activeConversationId ?? undefined);
   };
@@ -241,7 +297,7 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
             </div>
           ))}
 
-          {mutation.isPending && (
+          {isStreaming && (
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <LoaderCircle size={14} className="animate-spin text-primary" />
               {t("Analyzing your workspace…", "جاري تحليل مساحة العمل…")}
@@ -284,7 +340,7 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
             />
             <button
               type="submit"
-              disabled={!message.trim() || mutation.isPending}
+              disabled={!message.trim() || isStreaming}
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
               aria-label={t("Send message", "إرسال الرسالة")}
             >
