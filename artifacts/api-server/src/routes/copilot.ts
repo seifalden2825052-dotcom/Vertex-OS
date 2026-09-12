@@ -105,9 +105,11 @@ const streamGeminiResponse = async (
   while (true) {
     const { done, value } = await reader.read();
     buffer += decoder.decode(value, { stream: !done });
-    const events = buffer.split(/\r?\n\r?\n/);
-    buffer = events.pop() ?? "";
-    events.forEach(consumeEvent);
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop() ?? "";
+    lines.forEach((line) => {
+      if (line.startsWith("data:")) consumeEvent(line);
+    });
     if (done) break;
   }
   if (buffer.trim()) consumeEvent(buffer);
