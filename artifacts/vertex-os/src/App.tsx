@@ -24,21 +24,21 @@ type ActivityItem = { id: string; actor: string; action: string; target: string;
 const queryClient = new QueryClient();
 
 const customers: Customer[] = [
-  { id: 'c1', name: 'ريم العتيبي', company: 'Namaa Health', sector: 'Healthcare', health: 'On track', owner: 'Seif Alden', lastActivity: '12 min ago', value: 128400, initials: 'رع', color: 'bg-[#d8ede7] text-[#27695f]' },
+  { id: 'c1', name: 'ريم العتيبي', company: 'Namaa Health', sector: 'Healthcare', health: 'On track', owner: 'Seif Aldeen', lastActivity: '12 min ago', value: 128400, initials: 'رع', color: 'bg-[#d8ede7] text-[#27695f]' },
   { id: 'c2', name: 'Omar Haddad', company: 'Northstar Logistics', sector: 'Logistics', health: 'On track', owner: 'Yousef K.', lastActivity: '1 hr ago', value: 94200, initials: 'OH', color: 'bg-[#f8dfc7] text-[#a65d2e]' },
-  { id: 'c3', name: 'سارة منصور', company: 'Atelier 11', sector: 'Real estate', health: 'Needs attention', owner: 'Seif Alden', lastActivity: 'Yesterday', value: 67200, initials: 'سم', color: 'bg-[#e3dff1] text-[#665391]' },
+  { id: 'c3', name: 'سارة منصور', company: 'Atelier 11', sector: 'Real estate', health: 'Needs attention', owner: 'Seif Aldeen', lastActivity: 'Yesterday', value: 67200, initials: 'سم', color: 'bg-[#e3dff1] text-[#665391]' },
   { id: 'c4', name: 'Lina Haddad', company: 'Sahab Foods', sector: 'Consumer', health: 'At risk', owner: 'Amal F.', lastActivity: '2 days ago', value: 45800, initials: 'LH', color: 'bg-[#f3dbdf] text-[#a14d61]' },
   { id: 'c5', name: 'عبدالله الحربي', company: 'Razan Capital', sector: 'Finance', health: 'On track', owner: 'Yousef K.', lastActivity: '3 days ago', value: 211600, initials: 'عح', color: 'bg-[#d9e7f1] text-[#386b8b]' },
   { id: 'c6', name: 'Hana Park', company: 'Mizan Studio', sector: 'Creative', health: 'On track', owner: 'Amal F.', lastActivity: '4 days ago', value: 32900, initials: 'HP', color: 'bg-[#eee4cd] text-[#87692d]' },
 ];
 
 const seedProjects: Project[] = [
-  { id: 'p1', name: 'Q3 Brand Architecture', client: 'Namaa Health', status: 'In progress', progress: 68, dueDate: 'Aug 28', owner: 'Seif Alden', tasks: '17 / 25' },
+  { id: 'p1', name: 'Q3 Brand Architecture', client: 'Namaa Health', status: 'In progress', progress: 68, dueDate: 'Aug 28', owner: 'Seif Aldeen', tasks: '17 / 25' },
   { id: 'p2', name: 'Fleet Intelligence Portal', client: 'Northstar Logistics', status: 'Review', progress: 91, dueDate: 'Aug 22', owner: 'Yousef K.', tasks: '29 / 32' },
   { id: 'p3', name: 'Riyadh HQ Fit-out', client: 'Atelier 11', status: 'Planning', progress: 14, dueDate: 'Sep 16', owner: 'Amal F.', tasks: '4 / 28' },
   { id: 'p4', name: 'Investor Data Room', client: 'Razan Capital', status: 'Complete', progress: 100, dueDate: 'Aug 08', owner: 'Yousef K.', tasks: '18 / 18' },
   { id: 'p5', name: 'Summer Menu Launch', client: 'Sahab Foods', status: 'In progress', progress: 42, dueDate: 'Sep 03', owner: 'Amal F.', tasks: '11 / 26' },
-  { id: 'p6', name: 'Mizan identity refresh', client: 'Mizan Studio', status: 'Planning', progress: 8, dueDate: 'Oct 01', owner: 'Seif Alden', tasks: '2 / 24' },
+  { id: 'p6', name: 'Mizan identity refresh', client: 'Mizan Studio', status: 'Planning', progress: 8, dueDate: 'Oct 01', owner: 'Seif Aldeen', tasks: '2 / 24' },
 ];
 
 const seedInvoices: Invoice[] = [
@@ -51,10 +51,10 @@ const seedInvoices: Invoice[] = [
 ];
 
 const activities: ActivityItem[] = [
-  { id: 'a1', actor: 'Seif Alden', action: 'sent an invoice to', target: 'Namaa Health · INV-2024-081', time: '12 min ago', type: 'invoice', initials: 'SA' },
+  { id: 'a1', actor: 'Seif Aldeen', action: 'sent an invoice to', target: 'Namaa Health · INV-2024-081', time: '12 min ago', type: 'invoice', initials: 'SA' },
   { id: 'a2', actor: 'Yousef K.', action: 'moved project to review', target: 'Fleet Intelligence Portal', time: '1 hr ago', type: 'project', initials: 'YK' },
   { id: 'a3', actor: 'Amal F.', action: 'added a note to', target: 'Sahab Foods', time: '3 hrs ago', type: 'customer', initials: 'AF' },
-  { id: 'a4', actor: 'Seif Alden', action: 'completed task in', target: 'Q3 Brand Architecture', time: 'Yesterday', type: 'project', initials: 'SA' },
+  { id: 'a4', actor: 'Seif Aldeen', action: 'completed task in', target: 'Q3 Brand Architecture', time: 'Yesterday', type: 'project', initials: 'SA' },
   { id: 'a5', actor: 'System', action: 'connected bank account', target: 'Riyad Bank · •••• 1492', time: 'Yesterday', type: 'system', initials: 'VX' },
   { id: 'a6', actor: 'Yousef K.', action: 'marked invoice as paid', target: 'Northstar Logistics · INV-2024-079', time: '2 days ago', type: 'invoice', initials: 'YK' },
 ];
@@ -110,7 +110,7 @@ function App() {
     { href: '/activity', label: t('Activity', 'النشاط'), icon: Activity, key: 'activity' },
   ];
   const copilotContext = useMemo(() => JSON.stringify({
-    owner: workspace?.owner ?? 'Seif Alden',
+    owner: workspace?.owner ?? 'Seif Aldeen',
     metrics: workspace?.metrics ?? {
       monthlyRevenue: 184620,
       cashPosition: 326480,
@@ -187,13 +187,13 @@ function App() {
           </nav>
           <div className="mt-auto">
             <div className="mb-4 rounded-2xl border border-border bg-card/60 p-3.5">
-              <div className="mb-2 flex items-center gap-2 text-xs font-semibold"><ShieldCheck size={14} className="text-primary" /> {t('Good afternoon, Seif Alden', 'مساء الخير، سيف ألدن')}</div>
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold"><ShieldCheck size={14} className="text-primary" /> {t('Good afternoon, Seif Aldeen', 'مساء الخير، سيف الدين')}</div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">{t('Your cash position is healthy this week.', 'مركزك النقدي مستقر هذا الأسبوع.')}</p>
               <div className="mt-3 h-1 overflow-hidden rounded-full bg-secondary"><div className="h-full w-[78%] rounded-full bg-accent" /></div>
             </div>
             <div className="flex items-center gap-2.5 border-t border-border px-2 pt-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#173d42] text-[10px] font-bold text-[#dcefe7]">SA</div>
-              <div className="min-w-0 flex-1"><div className="truncate text-xs font-semibold">Seif Alden</div><div className="truncate text-[10px] text-muted-foreground">{t('Owner account', 'حساب المالك')}</div></div>
+              <div className="min-w-0 flex-1"><div className="truncate text-xs font-semibold">Seif Aldeen</div><div className="truncate text-[10px] text-muted-foreground">{t('Owner account', 'حساب المالك')}</div></div>
               <button onClick={() => toast(t('Profile menu coming soon', 'قائمة الملف الشخصي قريباً'))} className="text-muted-foreground" aria-label={t('Open profile menu', 'فتح قائمة الملف الشخصي')} data-testid="button-profile-menu"><MoreHorizontal size={17} /></button>
             </div>
           </div>
@@ -256,7 +256,7 @@ function Metric({ icon: Icon, label, value, note, positive = true, index = 0 }: 
   return <div className={`reveal reveal-${index} rounded-2xl border border-border bg-card p-4 shadow-[0_6px_20px_hsl(var(--foreground)/.025)] transition-transform hover:-translate-y-0.5 sm:p-5`}><div className="mb-5 flex items-start justify-between"><span className="rounded-lg bg-secondary p-2 text-primary"><Icon size={17} /></span><span className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${positive ? 'bg-[#dcefe6] text-[#27735d] dark:bg-[#193d35] dark:text-[#8bd4bd]' : 'bg-[#f7e3d6] text-[#a95f33] dark:bg-[#492c20] dark:text-[#f4ad80]'}`}>{positive ? <ArrowUpRight size={12} /> : <ArrowDownLeft size={12} />}{note}</span></div><div className="text-[11px] font-medium text-muted-foreground">{label}</div><div className="mt-1 font-mono text-[24px] font-medium tracking-[-.05em]">{value}</div></div>;
 }
 function Dashboard({ t, onCreate, projects, activities, metrics }: { t: Translator; onCreate: () => void; projects: Project[]; activities: ActivityItem[]; metrics?: WorkspaceSnapshotBody['metrics'] }) {
-  return <Shell><PageIntro t={t} eyebrow={t('Command center', 'مركز القيادة')} title={t('Good morning, Seif Alden.', 'صباح الخير، سيف ألدن.')} description={t('Here is the shape of your business today. Calm, clear, actionable.', 'هذه هي صورة عملك اليوم. واضحة، هادئة، وقابلة للتنفيذ.')} action={<button onClick={onCreate} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-[0_5px_16px_hsl(var(--primary)/.18)] transition-transform hover:-translate-y-0.5" data-testid="button-create-invoice"><Plus size={16} />{t('New invoice', 'فاتورة جديدة')}</button>} />
+  return <Shell><PageIntro t={t} eyebrow={t('Command center', 'مركز القيادة')} title={t('Good morning, Seif Aldeen.', 'صباح الخير، سيف الدين.')} description={t('Here is the shape of your business today. Calm, clear, actionable.', 'هذه هي صورة عملك اليوم. واضحة، هادئة، وقابلة للتنفيذ.')} action={<button onClick={onCreate} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-[0_5px_16px_hsl(var(--primary)/.18)] transition-transform hover:-translate-y-0.5" data-testid="button-create-invoice"><Plus size={16} />{t('New invoice', 'فاتورة جديدة')}</button>} />
      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Metric icon={CircleDollarSign} label={t('Revenue this month', 'إيرادات هذا الشهر')} value={`SAR ${money(metrics?.monthlyRevenue ?? 184620)}`} note="+12.8%" index={1} /><Metric icon={WalletCards} label={t('Cash position', 'المركز النقدي')} value={`SAR ${money(metrics?.cashPosition ?? 326480)}`} note="+8.4%" index={2} /><Metric icon={Users} label={t('Active customers', 'العملاء النشطون')} value={String(metrics?.activeCustomers ?? 24)} note="+3 this month" index={3} /><Metric icon={Target} label={t('Open projects', 'المشاريع المفتوحة')} value={String(metrics?.openProjects ?? projects.length).padStart(2, '0')} note="2 due soon" positive={false} index={4} /></div>
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_1fr]">
       <section className="reveal reveal-2 rounded-2xl border border-border bg-card p-5 sm:p-6"><div className="mb-7 flex items-start justify-between"><div><h2 className="text-[15px] font-bold">{t('Revenue overview', 'نظرة عامة على الإيرادات')}</h2><p className="mt-1 text-[11px] text-muted-foreground">{t('Collected revenue · last 6 months', 'الإيرادات المحصلة · آخر ٦ أشهر')}</p></div><button onClick={() => toast(t('Export prepared', 'تم تجهيز التصدير'))} className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-secondary" data-testid="button-export-revenue"><Download size={13} />{t('Export', 'تصدير')}</button></div><div className="flex h-[190px] items-end gap-2 sm:gap-4">{[['Mar','42'],['Apr','58'],['May','51'],['Jun','74'],['Jul','67'],['Aug','88']].map(([month, height], i) => <div className="group flex h-full flex-1 flex-col justify-end gap-2" key={month}><div className="relative flex-1"><div className="absolute inset-x-0 bottom-0 rounded-t-lg bg-[#d5e9e2] transition-all group-hover:bg-primary/30 dark:bg-[#193b3b]" style={{ height: `${Number(height) * .82}%` }} /><div className="absolute inset-x-0 bottom-0 rounded-t-lg bg-primary/80 transition-all group-hover:bg-primary" style={{ height: `${Number(height) * .52}%` }} /></div><span className="text-center font-mono text-[10px] text-muted-foreground">{t(month, ['مارس','أبريل','مايو','يونيو','يوليو','أغسطس'][i])}</span></div>)}</div><div className="mt-5 flex items-center gap-5 border-t border-border pt-4 text-[10px] text-muted-foreground"><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-sm bg-primary" />{t('Collected', 'محصل')}</span><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-sm bg-[#d5e9e2] dark:bg-[#193b3b]" />{t('Projected', 'متوقع')}</span><span className="ms-auto font-mono text-foreground">SAR 184,620</span></div></section>
