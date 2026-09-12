@@ -87,7 +87,7 @@ const streamGeminiResponse = async (
   let finishReason: string | undefined;
 
   const consumeEvent = (event: string) => {
-    const dataLine = event.split("\n").find((line) => line.startsWith("data:"));
+    const dataLine = event.split(/\r?\n/).find((line) => line.startsWith("data:"));
     if (!dataLine) return;
     const raw = dataLine.slice(5).trim();
     if (!raw || raw === "[DONE]") return;
@@ -105,7 +105,7 @@ const streamGeminiResponse = async (
   while (true) {
     const { done, value } = await reader.read();
     buffer += decoder.decode(value, { stream: !done });
-    const events = buffer.split("\n\n");
+    const events = buffer.split(/\r?\n\r?\n/);
     buffer = events.pop() ?? "";
     events.forEach(consumeEvent);
     if (done) break;
