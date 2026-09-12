@@ -3,10 +3,13 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": "artifacts/vertex-os/dist/public",
   "framework": "vite",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
