@@ -7,7 +7,6 @@ import { getUserKey } from "../lib/user-scope";
 const router: IRouter = Router();
 const MODEL = "gemini-3-flash-preview";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse`;
 
 type GeminiPayload = {
   candidates?: Array<{
@@ -74,49 +73,25 @@ const sendStreamEvent = (res: ExpressResponse, payload: unknown) => {
   res.write(`data: ${JSON.stringify(payload)}\n\n`);
 };
 
-const streamGeminiResponse = async (
-  response: globalThis.Response,
-  res: ExpressResponse,
-  onText: (text: string) => void,
-) => {
-  if (!response.body) throw new Error("Vertex AI returned an empty stream.");
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let answer = "";
-  let finishReason: string | undefined;
-
-  const consumeEvent = (event: string) => {
-    const dataLine = event.split(/\r?\n/).find((line) => line.startsWith("data:"));
-    if (!dataLine) return;
-    const raw = dataLine.slice(5).trim();
-    if (!raw || raw === "[DONE]") return;
-    const payload = JSON.parse(raw) as GeminiPayload;
-    finishReason = payload.candidates?.[0]?.finishReason ?? finishReason;
-    const text = payload.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join("") ?? "";
-    if (text) {
-      answer += text;
-      onText(text);
-    }
-  };
-
-  while (true) {
-    const { done, value } = await reader.read();
-    buffer += decoder.decode(value, { stream: !done });
-    const lines = buffer.split(/\r?\n/);
-    buffer = lines.pop() ?? "";
-    lines.forEach((line) => {
-      if (line.startsWith("data:")) consumeEvent(line);
-    });
-    if (done) break;
-  }
-  if (buffer.trim()) consumeEvent(buffer);
-  if (finishReason === "MAX_TOKENS") {
+const readGeminiAnswer = async (response: globalThis.Response) => {
+  const payload = (await response.json()) as GeminiPayload;
+  if (payload.candidates?.[0]?.finishReason === "MAX_TOKENS") {
     throw new Error("Vertex AI reached its response limit before completing the answer.");
   }
-  return answer.trim();
+  const answer = payload.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
+  if (!answer) throw new Error("Vertex AI returned an empty answer.");
+  return answer;
+};
+
+const sendAnswerInChunks = async (res: ExpressResponse, answer: string) => {
+  const chunkSize = 180;
+  for (let index = 0; index < answer.length; index += chunkSize) {
+    sendStreamEvent(res, { type: "delta", text: answer.slice(index, index + chunkSize) });
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
 };
 
 router.post("/copilot/chat/stream", async (req, res) => {
@@ -159,7 +134,7 @@ router.post("/copilot/chat/stream", async (req, res) => {
       savedConversationId = conversation.id;
     }
 
-    const response = await fetch(GEMINI_STREAM_URL, {
+    const response = await fetch(GEMINI_URL, {
       method: "POST",
       headers: {
         "x-goog-api-key": apiKey,
@@ -178,6 +153,8 @@ router.post("/copilot/chat/stream", async (req, res) => {
       return;
     }
 
+    const answer = await readGeminiAnswer(response);
+
     res.status(200);
     res.set({
       "Content-Type": "text/event-stream; charset=utf-8",
@@ -187,11 +164,7 @@ router.post("/copilot/chat/stream", async (req, res) => {
     });
     res.flushHeaders();
 
-    const answer = await streamGeminiResponse(response, res, (text) => {
-      sendStreamEvent(res, { type: "delta", text });
-    });
-    if (!answer) throw new Error("Vertex AI returned an empty answer.");
-
+    await sendAnswerInChunks(res, answer);
     await saveCopilotAnswer(savedConversationId, message, answer);
     sendStreamEvent(res, {
       type: "done",
@@ -272,21 +245,7 @@ router.post("/copilot/chat", async (req, res) => {
       return;
     }
 
-    const payload = (await response.json()) as GeminiPayload;
-    const finishReason = payload.candidates?.[0]?.finishReason;
-    if (finishReason === "MAX_TOKENS") {
-      res.status(502).json({ error: "Vertex AI reached its response limit before completing the answer." });
-      return;
-    }
-    const answer = payload.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join("")
-      .trim();
-
-    if (!answer) {
-      res.status(502).json({ error: "Vertex AI returned an empty answer." });
-      return;
-    }
+    const answer = await readGeminiAnswer(response);
 
     if (savedConversationId) {
       await saveCopilotAnswer(savedConversationId, message, answer);

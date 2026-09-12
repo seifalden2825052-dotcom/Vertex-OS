@@ -104,7 +104,7 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
       let buffer = "";
       let resultConversationId = conversationId;
       const processEvent = (event: string) => {
-        const dataLine = event.split("\n").find((line) => line.startsWith("data:"));
+        const dataLine = event.split(/\r?\n/).find((line) => line.startsWith("data:"));
         if (!dataLine) return;
         const payload = JSON.parse(dataLine.slice(5).trim()) as {
           type: "delta" | "done" | "error";
@@ -122,9 +122,11 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
       while (true) {
         const { done, value } = await reader.read();
         buffer += decoder.decode(value, { stream: !done });
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-        events.forEach(processEvent);
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() ?? "";
+        lines.forEach((line) => {
+          if (line.startsWith("data:")) processEvent(line);
+        });
         if (done) break;
       }
       if (buffer.trim()) processEvent(buffer);
