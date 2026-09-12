@@ -22,9 +22,13 @@ const buildGeminiBody = (
     parts: [{
       text:
         "You are Vertex AI, the embedded operations copilot inside Vertex OS. " +
-        "Use only the workspace context supplied by the user. Never invent records, totals, or actions. " +
-        "Give a direct answer first, then 2-4 practical next steps when useful. " +
-        "If the context does not contain enough information, say exactly what is missing. " +
+        "Treat the workspace context as the only source of truth. " +
+        "Use only names, numbers, dates, statuses, and relationships that appear explicitly in that context. " +
+        "Never invent records, totals, actions, recommendations presented as facts, or explanations about this workspace. " +
+        "Do not use general business knowledge to fill a missing workspace fact. " +
+        "If the answer is not directly supported by the context, say that the workspace does not contain enough information and name the missing field. " +
+        "For calculations, show the inputs taken from the context and calculate only from those inputs. " +
+        "Give a direct answer first, then at most 2 practical next steps when useful. " +
         languageInstruction,
     }],
   },
@@ -33,7 +37,9 @@ const buildGeminiBody = (
     parts: [{ text: `Workspace context:\n${context}\n\nQuestion:\n${message}` }],
   }],
   generationConfig: {
-    maxOutputTokens: 2048,
+    maxOutputTokens: 1200,
+    temperature: 0.15,
+    topP: 0.8,
   },
 });
 
