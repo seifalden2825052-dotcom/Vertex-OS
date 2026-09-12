@@ -38,9 +38,12 @@ const buildGeminiBody = (
     parts: [{ text: `Workspace context:\n${context}\n\nQuestion:\n${message}` }],
   }],
   generationConfig: {
-    maxOutputTokens: 4096,
+    maxOutputTokens: 16384,
     temperature: 0.25,
     topP: 0.9,
+    thinkingConfig: {
+      thinkingLevel: "high",
+    },
   },
 });
 
