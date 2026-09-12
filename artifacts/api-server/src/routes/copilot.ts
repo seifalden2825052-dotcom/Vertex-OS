@@ -10,7 +10,10 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MO
 const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse`;
 
 type GeminiPayload = {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> };
+    finishReason?: string;
+  }>;
 };
 
 const buildGeminiBody = (
@@ -38,7 +41,7 @@ const buildGeminiBody = (
     parts: [{ text: `Workspace context:\n${context}\n\nQuestion:\n${message}` }],
   }],
   generationConfig: {
-    maxOutputTokens: 16384,
+    maxOutputTokens: 65536,
     temperature: 0.25,
     topP: 0.9,
     thinkingConfig: {
@@ -81,6 +84,7 @@ const streamGeminiResponse = async (
   const decoder = new TextDecoder();
   let buffer = "";
   let answer = "";
+  let finishReason: string | undefined;
 
   const consumeEvent = (event: string) => {
     const dataLine = event.split("\n").find((line) => line.startsWith("data:"));
@@ -88,6 +92,7 @@ const streamGeminiResponse = async (
     const raw = dataLine.slice(5).trim();
     if (!raw || raw === "[DONE]") return;
     const payload = JSON.parse(raw) as GeminiPayload;
+    finishReason = payload.candidates?.[0]?.finishReason ?? finishReason;
     const text = payload.candidates?.[0]?.content?.parts
       ?.map((part) => part.text ?? "")
       .join("") ?? "";
@@ -106,6 +111,9 @@ const streamGeminiResponse = async (
     if (done) break;
   }
   if (buffer.trim()) consumeEvent(buffer);
+  if (finishReason === "MAX_TOKENS") {
+    throw new Error("Vertex AI reached its response limit before completing the answer.");
+  }
   return answer.trim();
 };
 
@@ -262,9 +270,12 @@ router.post("/copilot/chat", async (req, res) => {
       return;
     }
 
-    const payload = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
+    const payload = (await response.json()) as GeminiPayload;
+    const finishReason = payload.candidates?.[0]?.finishReason;
+    if (finishReason === "MAX_TOKENS") {
+      res.status(502).json({ error: "Vertex AI reached its response limit before completing the answer." });
+      return;
+    }
     const answer = payload.candidates?.[0]?.content?.parts
       ?.map((part) => part.text ?? "")
       .join("")
