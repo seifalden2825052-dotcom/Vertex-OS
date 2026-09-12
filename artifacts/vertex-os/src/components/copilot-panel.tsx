@@ -96,7 +96,14 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
         }),
       });
       if (!response.ok || !response.body) {
-        throw new Error("Vertex AI request failed");
+        if (response.status === 429) {
+          throw new Error(t(
+            "Gemini is rate-limited right now. Wait for the quota to reset or update the server key.",
+            "Gemini وصل إلى حد الاستخدام الآن. انتظر عودة الحصة أو حدّث مفتاح الخادم.",
+          ));
+        }
+        const errorPayload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(errorPayload?.error ?? "Vertex AI request failed");
       }
 
       const reader = response.body.getReader();
@@ -133,14 +140,16 @@ export function CopilotPanel({ lang, t, context, close }: CopilotPanelProps) {
       if (!answer) throw new Error("Vertex AI returned an empty answer");
       setActiveConversationId(resultConversationId ?? null);
       conversationsQuery.refetch();
-    } catch {
+    } catch (error) {
       setConversation((items) => {
         const next = [...items];
         const lastIndex = next.length - 1;
-        const errorMessage = t(
+        const errorMessage = error instanceof Error && error.message
+          ? error.message
+          : t(
           "Vertex AI is unavailable right now. Check the Gemini key and try again.",
           "Vertex AI غير متاح الآن. راجع مفتاح Gemini وحاول مرة أخرى.",
-        );
+          );
         if (lastIndex >= 0 && next[lastIndex].role === "assistant") {
           next[lastIndex] = { role: "assistant", content: answer || errorMessage };
         }

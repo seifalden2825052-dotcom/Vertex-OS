@@ -73,6 +73,17 @@ const sendStreamEvent = (res: ExpressResponse, payload: unknown) => {
   res.write(`data: ${JSON.stringify(payload)}\n\n`);
 };
 
+const sendGeminiFailure = (res: ExpressResponse, status: number) => {
+  if (status === 429) {
+    res.status(429).json({
+      code: "RATE_LIMITED",
+      error: "Gemini rate limit reached. Wait for the quota to reset or update the server-side Gemini key.",
+    });
+    return;
+  }
+  res.status(502).json({ error: "Vertex AI could not answer right now." });
+};
+
 const readGeminiAnswer = async (response: globalThis.Response) => {
   const payload = (await response.json()) as GeminiPayload;
   if (payload.candidates?.[0]?.finishReason === "MAX_TOKENS") {
@@ -149,7 +160,7 @@ router.post("/copilot/chat/stream", async (req, res) => {
 
     if (!response.ok) {
       req.log.error({ status: response.status }, "Vertex AI stream request failed");
-      res.status(502).json({ error: "Vertex AI could not answer right now." });
+      sendGeminiFailure(res, response.status);
       return;
     }
 
@@ -241,7 +252,7 @@ router.post("/copilot/chat", async (req, res) => {
 
     if (!response.ok) {
       req.log.error({ status: response.status }, "Vertex AI request failed");
-      res.status(502).json({ error: "Vertex AI could not answer right now." });
+      sendGeminiFailure(res, response.status);
       return;
     }
 
