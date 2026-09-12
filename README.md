@@ -22,7 +22,7 @@ The repository is configured as a Vercel monorepo project. The recommended Verce
 Root Directory is the repository root (`.`), so Vercel can discover both the
 frontend build and the root `api/[...path].ts` serverless function:
 
-- Build command: `pnpm run build`
+- Build command: `pnpm --filter @workspace/vertex-os run build`
 - Output directory: `artifacts/vertex-os/dist/public`
 - API functions: `api/[...path].ts`
 - SPA routes: `/customers`, `/projects`, `/invoices`, and `/activity` rewrite to `index.html`
